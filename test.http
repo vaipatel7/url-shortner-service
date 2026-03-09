@@ -1,0 +1,124 @@
+@host = http://localhost:8080
+@adminHost = http://localhost:8081
+
+###
+# -----------------------------------------------------------------
+# POST /v1/url/create - Create Short URL
+# -----------------------------------------------------------------
+
+### TC1: Create a short URL with an auto-generated alias (Success 201)
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "https://www.very-long-url-example.com/path/to/resource?query=param"
+}
+
+### TC2: Create a short URL with a valid custom alias (Success 201)
+# @name createWithCustomAlias
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "https://github.com/brijeshb42/url-shortner-service",
+  "alias": "my-awesome-repo!"
+}
+
+### TC3: Create a short URL with a custom alias and domain (fail 400)
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "https://www.postgresql.org/docs/current/index.html",
+  "alias": "pg-docs-15",
+  "domain": "short.ly"
+}
+
+### TC4: Attempt to create a short URL with a blank longUrl (Error 400)
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "",
+  "alias": "should-fail"
+}
+
+### TC5: Attempt to create a short URL with an invalid longUrl (Error 400)
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "not-a-valid-url",
+  "alias": "should-fail-too"
+}
+
+### TC6: Attempt to create a short URL with an alias that is too short (Error 400)
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "https://example.com",
+  "alias": "short"
+}
+
+### TC7: Attempt to create a short URL with an alias that is already taken (Error 422)
+# Note: This depends on TC2 (createWithCustomAlias) having been run first.
+POST {{host}}/v1/url/create
+Content-Type: application/json
+
+{
+  "longUrl": "https://some-other-url.com",
+  "alias": "my-awesome-repo"
+}
+
+###
+# -----------------------------------------------------------------
+# GET /{short_code} - Redirect
+# -----------------------------------------------------------------
+
+### TC8: Follow a redirect for a known short code (Success 302)
+# Note: This depends on TC2 (createWithCustomAlias) having been run first.
+# The REST client will show the redirect chain.
+GET {{host}}/my-awesome-repo
+
+### TC9: Attempt to follow a redirect for a non-existent short code (Error 404)
+GET {{host}}/this-alias-does-not-exist
+
+###
+# -----------------------------------------------------------------
+# GET /v1/url - List All Short URLs
+# -----------------------------------------------------------------
+
+### TC10: Get the first page of short URLs (page=0)
+GET {{host}}/v1/url?page=0&pageSize=10
+
+### TC11: Get the second page of short URLs (page=1)
+GET {{host}}/v1/url?page=1&pageSize=10
+
+###
+# -----------------------------------------------------------------
+# GET /v1/analytics - Click Analytics
+# -----------------------------------------------------------------
+
+### TC12: Get click analytics for the last 7 days (page=0)
+GET {{host}}/v1/analytics?page=0
+
+### TC13: Get click analytics for the 7-14 days ago period (page=1)
+GET {{host}}/v1/analytics?page=1
+
+### TC14: Get device type distribution for the last 30 days
+GET {{host}}/v1/analytics/devices
+
+###
+# -----------------------------------------------------------------
+# Admin Endpoints
+# -----------------------------------------------------------------
+
+### TC15: Check application health
+GET {{adminHost}}/healthcheck
+
+### TC16: Ping the application
+GET {{adminHost}}/ping
+
+### TC17: Get application metrics
+GET {{adminHost}}/metrics

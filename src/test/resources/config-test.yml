@@ -1,0 +1,35 @@
+# Dropwizard configuration for integration tests.
+# Database settings are overridden at runtime by Testcontainers via ConfigOverride.
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 0   # OS assigns a free port; read back via APP.getLocalPort()
+  adminConnectors:
+    - type: http
+      port: 0
+  requestLog:
+    appenders: []   # suppress access log noise in test output
+
+defaultDomain: localhost:8080
+
+database:
+  driverClass: org.postgresql.Driver
+  url: jdbc:postgresql://localhost:5432/urlshortener   # placeholder — overridden
+  user: urlshortener
+  password: password
+  validationQuery: "SELECT 1"
+  minSize: 1
+  maxSize: 5
+  checkConnectionOnBorrow: true
+
+logging:
+  level: WARN
+  loggers:
+    com.urlshortener: INFO
+    org.flywaydb: INFO
+  appenders:
+    - type: console
+      threshold: ALL
+      timeZone: UTC
+      logFormat: "%-5p [%d{ISO8601,UTC}] %c: %m%n%rEx"

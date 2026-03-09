@@ -18,7 +18,23 @@
 *.zip
 *.tar.gz
 *.rar
+*.class
+*.log
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+target
+.claude
+.vscode
+AGENTS.md
+dependency-reduced-pom.xml
+
+# frontend
+
+frontend/node_modules
+frontend/dist/
+frontend/.next/
+
+dependency-reduced-pom.xml

@@ -1,0 +1,46 @@
+# Dropwizard configuration for the URL Shortener Service
+# Environment variables are used for secrets so the same file works
+# locally and inside Docker.
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+  requestLog:
+    appenders:
+      - type: console
+
+# Default domain used in short URLs when the caller omits the domain field
+defaultDomain: ${DEFAULT_DOMAIN:-localhost:8080}
+
+# PostgreSQL DataSource (managed by Dropwizard's connection pool)
+database:
+  driverClass: org.postgresql.Driver
+  url: ${DB_URL:-jdbc:postgresql://localhost:5432/urlshortener}
+  user: ${DB_USER:-urlshortener}
+  password: ${DB_PASSWORD:-password}
+  properties:
+    charSet: UTF-8
+  maxWaitForConnection: 1s
+  validationQuery: "/* Health Check */ SELECT 1"
+  validationQueryTimeout: 3s
+  minSize: 2
+  maxSize: 10
+  checkConnectionOnBorrow: true
+  evictionInterval: 10s
+  minIdleTime: 1 minute
+
+logging:
+  level: INFO
+  loggers:
+    com.urlshortener: DEBUG
+    org.flywaydb: INFO
+    org.jdbi: WARN
+  appenders:
+    - type: console
+      threshold: ALL
+      timeZone: UTC
+      logFormat: "%-5p [%d{ISO8601,UTC}] %c: %m%n%rEx"

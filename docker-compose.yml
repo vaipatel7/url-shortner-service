@@ -1,0 +1,54 @@
+services:
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL 15
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:15-alpine
+    container_name: url-shortener-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: urlshortener
+      POSTGRES_USER: urlshortener
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U urlshortener -d urlshortener"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # URL Shortener backend (Dropwizard)
+  # Flyway migrations run automatically on startup before serving requests.
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: url-shortener-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"   # Application (REST API)
+      - "8081:8081"   # Admin (health, metrics)
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/urlshortener
+      DB_USER: urlshortener
+      DB_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/healthcheck || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+volumes:
+  postgres_data:
+    name: url-shortener-postgres-data

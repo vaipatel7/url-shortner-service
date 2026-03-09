@@ -1,0 +1,12 @@
+target/
+frontend/
+.git/
+.gitignore
+*.md
+*.yml
+!src/main/config/config.yml
+*.iml
+.idea/
+.vscode/
+*.log
+memory/
