@@ -45,6 +45,8 @@ import {
 } from '@chakra-ui/react'
 import { useCallback, useEffect, useState } from 'react'
 import {
+  Bar,
+  BarChart,
   CartesianGrid,
   Cell,
   Legend,
@@ -57,11 +59,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { ApiError, createShortUrl, getAnalytics, getDeviceDistribution, listUrls } from '@/lib/api'
+import { ApiError, createShortUrl, getAnalytics, getDeviceDistribution, getTopUrlsToday, listUrls } from '@/lib/api'
 import type {
   AnalyticsResponse,
   CreateUrlResponse,
   DeviceTypeStat,
+  TopUrlStat,
   UrlPageResponse,
 } from '@/types/api'
 
@@ -420,6 +423,7 @@ function AnalyticsPanel() {
   const [page, setPage]         = useState(0)
   const [analytics, setAnalytics] = useState<AnalyticsResponse | null>(null)
   const [devices, setDevices]   = useState<DeviceTypeStat[] | null>(null)
+  const [topUrls, setTopUrls]   = useState<TopUrlStat[] | null>(null)
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState<string | null>(null)
 
@@ -432,9 +436,10 @@ function AnalyticsPanel() {
     setError(null)
     try {
       if (withDevices) {
-        const [a, d] = await Promise.all([getAnalytics(p), getDeviceDistribution()])
+        const [a, d, t] = await Promise.all([getAnalytics(p), getDeviceDistribution(), getTopUrlsToday()])
         setAnalytics(a)
         setDevices(d.data)
+        setTopUrls(t.data)
       } else {
         setAnalytics(await getAnalytics(p))
       }
@@ -558,6 +563,51 @@ function AnalyticsPanel() {
             </ResponsiveContainer>
           </Box>
 
+          {/* ── Top URLs today ───────────────────────────────────── */}
+          {topUrls !== null && (
+            <>
+              <Divider />
+              <Box bg={cardBg} p={5} borderRadius="lg" borderWidth={1}>
+                <Flex justify="space-between" align="center" mb={4}>
+                  <Text fontWeight="semibold">Top 10 URLs Today</Text>
+                </Flex>
+
+                {topUrls.length === 0 ? (
+                  <Text fontSize="sm" color={textMuted} textAlign="center" py={4}>
+                    No clicks recorded today yet.
+                  </Text>
+                ) : (
+                  <ResponsiveContainer width="100%" height={Math.max(topUrls.length * 36, 120)}>
+                    <BarChart
+                      data={topUrls}
+                      layout="vertical"
+                      margin={{ top: 0, right: 24, left: 8, bottom: 0 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke={gridColor} horizontal={false} />
+                      <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="alias"
+                        width={90}
+                        tick={{ fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        formatter={(v, _name, props) => [
+                          `${(v as number).toLocaleString()} clicks`,
+                          props.payload?.longUrl ?? '',
+                        ]}
+                        labelFormatter={(label) => `/${label}`}
+                      />
+                      <Bar dataKey="clicks" fill="#3182CE" radius={[0, 4, 4, 0]} maxBarSize={24} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </Box>
+            </>
+          )}
+
           {/* ── Device distribution ──────────────────────────────── */}
           {devices && devices.length > 0 && (
             <>
@@ -610,7 +660,7 @@ function AnalyticsPanel() {
               size="sm"
               variant="outline"
               isLoading={loading}
-              onClick={() => fetch(page, true)}
+              onClick={() => fetch(0, true)}
             >
               Refresh
             </Button>

@@ -3,6 +3,7 @@ package com.urlshortener.resource.v1;
 import com.urlshortener.dto.v1.AnalyticsResponse;
 import com.urlshortener.dto.v1.DeviceDistributionResponse;
 import com.urlshortener.dto.v1.ErrorResponse;
+import com.urlshortener.dto.v1.TopUrlsResponse;
 import com.urlshortener.service.v1.AnalyticsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -18,8 +19,9 @@ import jakarta.ws.rs.core.Response;
 /**
  * REST resource exposing click analytics.
  *
- * GET /v1/analytics?page=0   – paginated 7-day analytics windows
- * GET /v1/analytics/devices  – device-type distribution for the last 30 days
+ * GET /v1/analytics?page=0      – paginated 7-day analytics windows
+ * GET /v1/analytics/devices     – device-type distribution for the last 30 days
+ * GET /v1/analytics/top-urls    – top 10 URLs by clicks for today (UTC)
  */
 @Tag(name = "Analytics", description = "Click analytics and device distribution")
 @Path("/v1/analytics")
@@ -62,6 +64,19 @@ public class AnalyticsResource {
     public Response getDeviceDistribution() {
         DeviceDistributionResponse body = DeviceDistributionResponse.builder()
                 .data(analyticsService.getDeviceTypeDistribution())
+                .build();
+        return Response.ok(body).build();
+    }
+
+    @Operation(summary = "Get top 10 URLs for today",
+            description = "Returns the top 10 short URLs ranked by click count for today (UTC calendar day).")
+    @ApiResponse(responseCode = "200", description = "Top URLs for today",
+            content = @Content(schema = @Schema(implementation = TopUrlsResponse.class)))
+    @GET
+    @Path("/top-urls")
+    public Response getTopUrlsToday() {
+        TopUrlsResponse body = TopUrlsResponse.builder()
+                .data(analyticsService.getTopUrlsToday())
                 .build();
         return Response.ok(body).build();
     }

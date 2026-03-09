@@ -3,6 +3,7 @@ import type {
   CreateUrlRequest,
   CreateUrlResponse,
   DeviceDistributionResponse,
+  TopUrlsResponse,
   UrlPageResponse,
 } from '@/types/api'
 
@@ -80,4 +81,12 @@ export async function getAnalytics(page: number): Promise<AnalyticsResponse> {
 export async function getDeviceDistribution(): Promise<DeviceDistributionResponse> {
   const res = await fetch(`${API_BASE}/v1/analytics/devices`)
   return handleResponse<DeviceDistributionResponse>(res)
+}
+
+/**
+ * Returns the top 10 URLs by click count for today (UTC).
+ */
+export async function getTopUrlsToday(): Promise<TopUrlsResponse> {
+  const res = await fetch(`${API_BASE}/v1/analytics/top-urls`)
+  return handleResponse<TopUrlsResponse>(res)
 }

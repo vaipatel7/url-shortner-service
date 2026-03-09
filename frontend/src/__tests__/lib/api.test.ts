@@ -14,12 +14,14 @@ import {
   createShortUrl,
   getAnalytics,
   getDeviceDistribution,
+  getTopUrlsToday,
   listUrls,
 } from '@/lib/api'
 import type {
   AnalyticsResponse,
   CreateUrlResponse,
   DeviceDistributionResponse,
+  TopUrlsResponse,
   UrlPageResponse,
 } from '@/types/api'
 
@@ -110,6 +112,14 @@ const DEVICE_RESPONSE: DeviceDistributionResponse = {
   data: [
     { deviceType: 'DESKTOP', clicks: 60 },
     { deviceType: 'MOBILE', clicks: 40 },
+  ],
+}
+
+const TOP_URLS_RESPONSE: TopUrlsResponse = {
+  data: [
+    { alias: 'abc123', longUrl: 'https://example.com', clicks: 42 },
+    { alias: 'xyz789', longUrl: 'https://other.com', clicks: 17 },
+    { alias: 'qrs456', longUrl: 'https://another.com', clicks: 5 },
   ],
 }
 
@@ -396,6 +406,79 @@ describe('getDeviceDistribution', () => {
     await expect(getDeviceDistribution()).rejects.toMatchObject({
       name: 'ApiError',
       status: 503,
+    })
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getTopUrlsToday
+// ---------------------------------------------------------------------------
+
+describe('getTopUrlsToday', () => {
+  it('returns top URLs response on 200', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(200, TOP_URLS_RESPONSE),
+    )
+
+    const result = await getTopUrlsToday()
+
+    expect(result.data).toHaveLength(3)
+    expect(result.data[0]).toEqual({ alias: 'abc123', longUrl: 'https://example.com', clicks: 42 })
+    expect(result.data[1]).toEqual({ alias: 'xyz789', longUrl: 'https://other.com', clicks: 17 })
+    expect(result.data[2]).toEqual({ alias: 'qrs456', longUrl: 'https://another.com', clicks: 5 })
+  })
+
+  it('GETs /v1/analytics/top-urls', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(200, TOP_URLS_RESPONSE),
+    )
+
+    await getTopUrlsToday()
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/v1/analytics/top-urls'),
+    )
+  })
+
+  it('returns empty data array when no clicks today', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(200, { data: [] }),
+    )
+
+    const result = await getTopUrlsToday()
+
+    expect(result.data).toHaveLength(0)
+  })
+
+  it('data is ordered by clicks descending', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(200, TOP_URLS_RESPONSE),
+    )
+
+    const result = await getTopUrlsToday()
+
+    for (let i = 1; i < result.data.length; i++) {
+      expect(result.data[i - 1].clicks).toBeGreaterThanOrEqual(result.data[i].clicks)
+    }
+  })
+
+  it('throws ApiError on 500', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(500, { message: 'Server error' }),
+    )
+
+    await expect(getTopUrlsToday()).rejects.toMatchObject({ name: 'ApiError', status: 500 })
+  })
+
+  it('throws ApiError with message body on 503', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue(
+      asFetchResponse(503, { message: 'Service unavailable' }),
+    )
+
+    await expect(getTopUrlsToday()).rejects.toMatchObject({
+      name: 'ApiError',
+      status: 503,
+      message: 'Service unavailable',
     })
   })
 })

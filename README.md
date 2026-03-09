@@ -218,3 +218,6 @@ Automatically generate the OpenAPI specification during the Maven build and comm
 Generate TypeScript types from the OpenAPI specification and publish them as a package that the frontend can consume. This removes the need for the UI to manually recreate types and keeps the backend as the single source of truth, ensuring a consistent contract with minimal maintenance.
 
 # Explore better options than using SecureRandom
+
+# Integration Tests
+Currently there is one integration testand multiple unit test for frontend and backend, testing core feature of adding a new short url and successful redirect when using it. While this ensures future regressions to sunny day scenarios are caught earlier during CI/CD, add more coverage for validations as well.

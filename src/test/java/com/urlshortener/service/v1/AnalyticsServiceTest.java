@@ -3,6 +3,7 @@ package com.urlshortener.service.v1;
 import com.urlshortener.dto.v1.AnalyticsResponse;
 import com.urlshortener.model.DailyClickCount;
 import com.urlshortener.model.DeviceTypeStat;
+import com.urlshortener.model.TopUrlStat;
 import com.urlshortener.repository.ClickEventRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -231,6 +232,53 @@ class AnalyticsServiceTest {
         AnalyticsResponse response = analyticsService.getAnalytics(0);
 
         assertThat(response.getPagination().getTotalPages()).isEqualTo(1);
+    }
+
+    // -------------------------------------------------------------------------
+    // getTopUrlsToday
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getTopUrlsToday_delegatesToRepository() {
+        List<TopUrlStat> expected = List.of(
+                TopUrlStat.builder().alias("abc123").longUrl("https://example.com").clicks(10L).build()
+        );
+        when(clickEventRepository.topUrlsInRange(any(), any())).thenReturn(expected);
+
+        List<TopUrlStat> result = analyticsService.getTopUrlsToday();
+
+        assertThat(result).isEqualTo(expected);
+        verify(clickEventRepository).topUrlsInRange(any(Instant.class), any(Instant.class));
+    }
+
+    @Test
+    void getTopUrlsToday_noClicksToday_returnsEmptyList() {
+        when(clickEventRepository.topUrlsInRange(any(), any())).thenReturn(List.of());
+
+        List<TopUrlStat> result = analyticsService.getTopUrlsToday();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    void getTopUrlsToday_passesTodayUtcBoundaries() {
+        when(clickEventRepository.topUrlsInRange(any(), any())).thenReturn(List.of());
+
+        analyticsService.getTopUrlsToday();
+
+        // Capture the time range passed to the repository
+        org.mockito.ArgumentCaptor<Instant> fromCaptor = org.mockito.ArgumentCaptor.forClass(Instant.class);
+        org.mockito.ArgumentCaptor<Instant> toCaptor   = org.mockito.ArgumentCaptor.forClass(Instant.class);
+        verify(clickEventRepository).topUrlsInRange(fromCaptor.capture(), toCaptor.capture());
+
+        Instant from = fromCaptor.getValue();
+        Instant to   = toCaptor.getValue();
+
+        // 'to' must be exactly 24 h after 'from'
+        assertThat(java.time.Duration.between(from, to).toHours()).isEqualTo(24);
+        // 'from' must be midnight UTC today
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        assertThat(from).isEqualTo(today.atStartOfDay(ZoneOffset.UTC).toInstant());
     }
 
     // -------------------------------------------------------------------------

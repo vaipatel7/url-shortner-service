@@ -68,3 +68,13 @@ export interface DeviceTypeStat {
 export interface DeviceDistributionResponse {
   data: DeviceTypeStat[]
 }
+
+export interface TopUrlStat {
+  alias: string
+  longUrl: string
+  clicks: number
+}
+
+export interface TopUrlsResponse {
+  data: TopUrlStat[]
+}

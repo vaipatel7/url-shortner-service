@@ -3,7 +3,9 @@ package com.urlshortener.repository;
 import com.urlshortener.model.ClickEvent;
 import com.urlshortener.model.DailyClickCount;
 import com.urlshortener.model.DeviceTypeStat;
+import com.urlshortener.model.TopUrlStat;
 import com.urlshortener.model.mapper.ClickEventMapper;
+import com.urlshortener.model.mapper.TopUrlStatMapper;
 import org.jdbi.v3.sqlobject.config.RegisterRowMapper;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 @RegisterRowMapper(ClickEventMapper.class)
+@RegisterRowMapper(TopUrlStatMapper.class)
 public interface ClickEventRepository {
 
     /**
@@ -87,4 +90,17 @@ public interface ClickEventRepository {
               "GROUP BY device_type " +
               "ORDER BY clicks DESC")
     List<DeviceTypeStat> deviceTypeDistributionSince(@Bind("since") Instant since);
+
+    /**
+     * Top 10 URLs by click count within a half-open time range [from, to).
+     * Joins with short_urls to return alias and long_url alongside the click count.
+     */
+    @SqlQuery("SELECT s.alias, s.long_url, COUNT(*) AS clicks " +
+              "FROM click_events c " +
+              "JOIN short_urls s ON s.id = c.short_url_id " +
+              "WHERE c.clicked_at >= :from AND c.clicked_at < :to " +
+              "GROUP BY s.id, s.alias, s.long_url " +
+              "ORDER BY clicks DESC " +
+              "LIMIT 10")
+    List<TopUrlStat> topUrlsInRange(@Bind("from") Instant from, @Bind("to") Instant to);
 }

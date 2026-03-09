@@ -3,6 +3,7 @@ package com.urlshortener;
 import com.urlshortener.filter.CorsFilter;
 import com.urlshortener.model.mapper.DailyClickCountMapper;
 import com.urlshortener.model.mapper.DeviceTypeStatMapper;
+import com.urlshortener.model.mapper.TopUrlStatMapper;
 import com.urlshortener.repository.ClickEventRepository;
 import com.urlshortener.repository.UrlRepository;
 import com.urlshortener.resource.RedirectResource;
@@ -53,6 +54,7 @@ public class UrlShortenerApplication extends Application<UrlShortenerConfigurati
         // 3. Register row mappers for analytics result types
         jdbi.registerRowMapper(new DailyClickCountMapper());
         jdbi.registerRowMapper(new DeviceTypeStatMapper());
+        jdbi.registerRowMapper(new TopUrlStatMapper());
 
         // 4. Wire up repositories
         final UrlRepository urlRepository = jdbi.onDemand(UrlRepository.class);

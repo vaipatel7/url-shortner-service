@@ -5,7 +5,9 @@ import com.urlshortener.dto.v1.AnalyticsResponse;
 import com.urlshortener.dto.v1.AnalyticsSummary;
 import com.urlshortener.dto.v1.DeviceDistributionResponse;
 import com.urlshortener.dto.v1.TimeseriesPoint;
+import com.urlshortener.dto.v1.TopUrlsResponse;
 import com.urlshortener.model.DeviceTypeStat;
+import com.urlshortener.model.TopUrlStat;
 import com.urlshortener.service.v1.AnalyticsService;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.BeforeEach;
@@ -122,6 +124,62 @@ class AnalyticsResourceTest {
         analyticsResource.getDeviceDistribution();
 
         verify(analyticsService).getDeviceTypeDistribution();
+    }
+
+    // -------------------------------------------------------------------------
+    // GET /v1/analytics/top-urls
+    // -------------------------------------------------------------------------
+
+    @Test
+    void getTopUrlsToday_returns200WithTopUrlStats() {
+        List<TopUrlStat> stats = List.of(
+                TopUrlStat.builder().alias("abc123").longUrl("https://example.com").clicks(42L).build(),
+                TopUrlStat.builder().alias("xyz789").longUrl("https://other.com").clicks(17L).build()
+        );
+        when(analyticsService.getTopUrlsToday()).thenReturn(stats);
+
+        Response response = analyticsResource.getTopUrlsToday();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        TopUrlsResponse body = (TopUrlsResponse) response.getEntity();
+        assertThat(body.getData()).isEqualTo(stats);
+        assertThat(body.getData()).hasSize(2);
+    }
+
+    @Test
+    void getTopUrlsToday_emptyList_returns200WithEmptyData() {
+        when(analyticsService.getTopUrlsToday()).thenReturn(List.of());
+
+        Response response = analyticsResource.getTopUrlsToday();
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        TopUrlsResponse body = (TopUrlsResponse) response.getEntity();
+        assertThat(body.getData()).isEmpty();
+    }
+
+    @Test
+    void getTopUrlsToday_delegatesToService() {
+        when(analyticsService.getTopUrlsToday()).thenReturn(List.of());
+
+        analyticsResource.getTopUrlsToday();
+
+        verify(analyticsService).getTopUrlsToday();
+    }
+
+    @Test
+    void getTopUrlsToday_statsOrderedByClicksDescending() {
+        List<TopUrlStat> stats = List.of(
+                TopUrlStat.builder().alias("top1").longUrl("https://a.com").clicks(100L).build(),
+                TopUrlStat.builder().alias("top2").longUrl("https://b.com").clicks(50L).build(),
+                TopUrlStat.builder().alias("top3").longUrl("https://c.com").clicks(10L).build()
+        );
+        when(analyticsService.getTopUrlsToday()).thenReturn(stats);
+
+        Response response = analyticsResource.getTopUrlsToday();
+
+        TopUrlsResponse body = (TopUrlsResponse) response.getEntity();
+        assertThat(body.getData().get(0).getClicks()).isGreaterThan(body.getData().get(1).getClicks());
+        assertThat(body.getData().get(1).getClicks()).isGreaterThan(body.getData().get(2).getClicks());
     }
 
     // -------------------------------------------------------------------------

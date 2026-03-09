@@ -8,6 +8,7 @@ import com.urlshortener.model.ClickEvent;
 import com.urlshortener.model.DailyClickCount;
 import com.urlshortener.model.DeviceTypeStat;
 import com.urlshortener.model.ShortUrl;
+import com.urlshortener.model.TopUrlStat;
 import com.urlshortener.repository.ClickEventRepository;
 import io.dropwizard.lifecycle.Managed;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +152,16 @@ public class AnalyticsService implements Managed {
     public List<DeviceTypeStat> getDeviceTypeDistribution() {
         Instant since = Instant.now().minus(Duration.ofDays(DEVICE_DISTRIBUTION_DAYS));
         return clickEventRepository.deviceTypeDistributionSince(since);
+    }
+
+    /**
+     * Top 10 URLs by click count for today (UTC calendar day).
+     */
+    public List<TopUrlStat> getTopUrlsToday() {
+        ZonedDateTime todayUtc = ZonedDateTime.now(ZoneOffset.UTC).toLocalDate().atStartOfDay(ZoneOffset.UTC);
+        Instant todayStart = todayUtc.toInstant();
+        Instant tomorrowStart = todayUtc.plusDays(1).toInstant();
+        return clickEventRepository.topUrlsInRange(todayStart, tomorrowStart);
     }
 
     // -------------------------------------------------------------------------
