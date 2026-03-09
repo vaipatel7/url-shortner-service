@@ -330,14 +330,21 @@ function ShortUrlsPanel() {
             </Button>
           </Flex>
 
-          <TableContainer bg={tableBg} borderRadius="lg" borderWidth={1}>
-            <Table size="sm" variant="simple">
+          <TableContainer bg={tableBg} borderRadius="lg" borderWidth={1} overflowX="auto">
+            <Table size="sm" variant="simple" style={{ tableLayout: 'fixed', width: '100%' }}>
               <Thead>
                 <Tr>
-                  <Th>Alias</Th>
+                  <Th w="140px" whiteSpace="nowrap">Alias</Th>
                   <Th>Long URL</Th>
-                  <Th isNumeric>Clicks</Th>
-                  <Th w="1px" />
+                  <Th w="80px" whiteSpace="nowrap" isNumeric>Clicks</Th>
+                  <Th
+                    w="72px"
+                    position="sticky"
+                    right={0}
+                    bg={tableBg}
+                    zIndex={1}
+                    boxShadow="-2px 0 6px rgba(0,0,0,0.06)"
+                  />
                 </Tr>
               </Thead>
               <Tbody>
@@ -350,27 +357,34 @@ function ShortUrlsPanel() {
                 ) : (
                   data.data.map(row => (
                     <Tr key={row.alias}>
-                      <Td fontFamily="mono" whiteSpace="nowrap">
+                      <Td fontFamily="mono" whiteSpace="nowrap" overflow="hidden" textOverflow="ellipsis">
                         {row.alias}
                       </Td>
-                      <Td>
+                      <Td overflow="hidden">
                         <Link
                           href={row.longUrl}
                           isExternal
                           color="blue.400"
-                          isTruncated
-                          maxW="380px"
                           display="block"
+                          overflow="hidden"
+                          textOverflow="ellipsis"
+                          whiteSpace="nowrap"
                         >
                           {row.longUrl}
                         </Link>
                       </Td>
-                      <Td whiteSpace="nowrap" textAlign="center">
+                      <Td whiteSpace="nowrap" textAlign="right">
                         <Text fontSize="sm" color="gray.500">
                           {row.clickCount} click{row.clickCount !== 1 ? 's' : ''}
                         </Text>
                       </Td>
-                      <Td whiteSpace="nowrap">
+                      <Td
+                        whiteSpace="nowrap"
+                        position="sticky"
+                        right={0}
+                        bg={tableBg}
+                        boxShadow="-2px 0 6px rgba(0,0,0,0.06)"
+                      >
                         <Button
                           size="xs"
                           colorScheme="blue"
@@ -689,7 +703,7 @@ export default function HomePage() {
         </Container>
       </Box>
 
-      <Container maxW="2xl" pb={16}>
+      <Container maxW="4xl" pb={16}>
         <Tabs colorScheme="blue" variant="enclosed">
           <TabList>
             <Tab>URL Shortener</Tab>
