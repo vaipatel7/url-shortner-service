@@ -9,6 +9,7 @@ import lombok.Data;
 public class CreateUrlRequest {
 
     @NotBlank(message = "is required and must not be blank")
+    @Size(max = 2048, message = "must not exceed 2048 characters")
     @Pattern(
         regexp = "^https?://\\S+",
         message = "must be a valid HTTP or HTTPS URL"

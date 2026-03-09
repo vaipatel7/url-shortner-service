@@ -104,6 +104,8 @@ function ShortenForm() {
     const trimmedUrl = longUrl.trim()
     if (!trimmedUrl) {
       e.longUrl = 'Long URL is required'
+    } else if (trimmedUrl.length > 2048) {
+      e.longUrl = 'URL must not exceed 2048 characters'
     } else {
       try {
         const parsed = new URL(trimmedUrl)
