@@ -692,8 +692,13 @@ function AnalyticsPanel() {
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
+  const [mounted, setMounted] = useState(false)
   const bg = useColorModeValue('gray.100', 'gray.900')
   const headerBg = useColorModeValue('white', 'gray.800')
+
+  useEffect(() => { setMounted(true) }, [])
+
+  if (!mounted) return null
 
   return (
     <Box minH="100vh" bg={bg}>
