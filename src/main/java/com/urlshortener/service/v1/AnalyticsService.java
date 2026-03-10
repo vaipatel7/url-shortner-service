@@ -106,9 +106,17 @@ public class AnalyticsService implements Managed {
      * </ul>
      */
     public AnalyticsResponse getAnalytics(int page) {
+        // Align to UTC calendar-day boundaries so the 7-point timeseries always covers
+        // 7 complete days ending at the close of today (i.e. start of tomorrow UTC).
+        // Using Instant.now() as the upper bound would cause the window to span 8 calendar
+        // dates, dropping today's data from the generated timeseries labels.
         Instant now = Instant.now();
-        Instant currentEnd    = now.minus(Duration.ofDays((long) TIMESERIES_DAYS * page));
-        Instant currentStart  = currentEnd.minus(Duration.ofDays(TIMESERIES_DAYS));
+        ZonedDateTime windowEnd = LocalDate.now(ZoneOffset.UTC)
+                .plusDays(1)
+                .atStartOfDay(ZoneOffset.UTC)
+                .minusDays((long) TIMESERIES_DAYS * page);
+        Instant currentEnd    = windowEnd.toInstant();
+        Instant currentStart  = windowEnd.minusDays(TIMESERIES_DAYS).toInstant();
         Instant previousStart = currentStart.minus(Duration.ofDays(TIMESERIES_DAYS));
 
         long currentClicks  = clickEventRepository.countInRange(currentStart, currentEnd);

@@ -72,6 +72,9 @@ docker compose down
 
 # Stop and wipe database
 docker compose down -v
+
+# connect to database from terminal
+docker exec -it url-shortener-postgres psql -U urlshortener -d urlshortener
 ```
 
 ---
@@ -170,7 +173,7 @@ The same long URL can generate different aliases each time instead of reusing an
 # Performance overhead
 Random generation combined with database uniqueness checks can become inefficient at very high scale.
 
-# Fixed alias lengthAlw
+# Fixed alias length
 ays generating 8-character aliases reduces flexibility and may create unnecessarily long URLs for small datasets.
 
 # SecureRandom overhead
@@ -220,4 +223,4 @@ Generate TypeScript types from the OpenAPI specification and publish them as a p
 # Explore better options than using SecureRandom
 
 # Integration Tests
-Currently there is one integration testand multiple unit test for frontend and backend, testing core feature of adding a new short url and successful redirect when using it. While this ensures future regressions to sunny day scenarios are caught earlier during CI/CD, add more coverage for validations as well.
+Currently there are two integration tests testing core feature of adding a new short url, successful redirect when using it and daily aggregation and multiple unit tests for frontend and backend. While this ensures future regressions to sunny day scenarios are caught earlier during CI/CD, add more coverage for validations as well and edge cases as well.
