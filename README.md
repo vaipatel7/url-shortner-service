@@ -188,7 +188,7 @@ Currently, the application does not implement user management or rate limiting d
 - **QR Code & Social Sharing** — provide QR codes and built-in social media sharing options to increase link visibility and improve user engagement.
 - **User Management** — introduce user accounts with optional paid subscriptions to enable personalized and secure experiences.
 - **Custom Domains** — allow branded short links (e.g., `youtu.be/videoID`) to improve brand recognition, trust, and click-through rates.
-- **Daily Reporting & Analytics** — provide insights into link performance and ROI.
+- **Daily Reporting & Analytics** — provide insights into link performance and ROI. Add more charts for example, top 10 IPs.
 - **Link Expiration** — allow users to set expiration dates for links for better control and security.
 - **Edit URLs** — allow editing the long URL for an alias after creation so that changes do not require resharing a new short URL.
 - **Automatic Link Expiration** — support automatic expiration based on a user-defined timeframe or inactivity (e.g., X months or years). When an expired link is accessed, display an error page. Expired links can either be moved to a historical datastore for auditing/analytics or deleted entirely.
