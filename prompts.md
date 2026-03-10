@@ -74,7 +74,7 @@ This file records all significant prompts used to scaffold and evolve this proje
 url-shortener-backend   | org.flywaydb.core.api.FlywayException: No database found to handle ${DB_URL:-jdbc:postgresql://localhost:5432/urlshortener}
 
 ---
->For the POST /create endpoint, create a recornd in database table short_url. 
+>For the POST /create endpoint, create a record in database table short_url. 
 request payload: 
 - alias (optional but if present must be atleast 6 characters)
 - long_url required
@@ -234,3 +234,5 @@ The service responds with HTTP 201 and returns the short URL and alias.
 The database contains a new record mapping the alias to the long URL.
 Resolving the short URL (GET /:alias) returns an HTTP 302 redirect to the original long URL.
 A click event is recorded in the database with the correct alias, timestamp, and client metadata.
+
+> On the analytics page, after Daily clicks trend chart, show top 10 urls for today. add backend api and frontend chart. Add unit tests for backend

@@ -105,7 +105,10 @@ NEXT_PUBLIC_API_URL=http://localhost:8080
 ## REST API Reference
 
 Base URL: `http://localhost:8080`
-test.http under project root contains requests to test backend endpoints.
+
+> The `test.http` file at the project root contains ready-to-run requests for all backend endpoints (requires VS Code REST Client).
+
+---
 
 ## Configuration Reference
 
@@ -134,93 +137,66 @@ Add new migrations by creating `V{N}__{description}.sql` in `src/main/resources/
 ---
 
 
-### Architectural notes
-## Frontend
+## Architectural Notes
+
+### Frontend
 Next.js was chosen for the frontend due to familiarity and its advantages as a single-page application framework, enabling faster navigation and a smoother user experience.
 
-## API Design
+### API Design
 REST is used to keep the architecture simple for this small-scale service. GraphQL could be considered in the future if more complex analytics or multi-dataset queries are required. For URL creation and redirects, REST still seems like an ideal choice due to simplicity.
 
-# Programming Language
-Java was chosen due to familiarity with the syntax and its proven scalability for production-grade applications. 
+### Programming Language
+Java was chosen due to familiarity with the syntax and its proven scalability for production-grade applications.
 
-## Microservice Framework
+### Microservice Framework
 Two options were evaluated — Spring Boot and Dropwizard. Dropwizard was chosen because of recent experience, allowing faster development.
 
-## Database Choice
+### Database Choice
 A relational database was selected due to the small, structured nature of the entities and ACID properties which in this case will ensure no alias collisions. PostgreSQL is known for its scalability and performance which is making it a suitable choice for this service.
 
-## Duplicate Alias Handling
+### Duplicate Alias Handling
 To speed up alias uniqueness checks when creating short URLs, an in-memory HashSet is currently used. While suitable for a single-instance local dev environment, it does not scale well across multiple instances. In production, a distributed cache such as Redis would be needed.
 
-## Click Event Storage: 
+### Click Event Storage
 Click events are stored directly in the database for this small-scale service. For millions of users, a low-latency, high-throughput streaming service such as Kafka or Kinesis could be used to publish events asynchronously. Consumers would then parse and store these events in an analytics datastore like PostgreSQL or a more sophisticated system such as Snowflake with RBAC support. This asynchronous approach ensures that redirects remain fast and unaffected by analytics processing.
 
-## Scaling & Load Balancing: 
+### Scaling & Load Balancing
 As user traffic grows, multiple instances of the service can be deployed behind a load balancer to efficiently distribute requests and improve reliability. Redirect requests typically far exceed short URL creation requests. To handle this load, a read replica of the primary database can be introduced, with all writes (e.g., creating short URLs) directed to the primary. Redirect handling could also be moved to a separate service that reads exclusively from the replica, allowing independent scaling. Even if redirects remain in the same service, reads can be routed to the replica while writes continue to the primary, improving performance and scalability. To further reduce load on the read replica, frequently accessed URLs can be cached using an LRU eviction policy.
 
-## Using SecureRandom for alias generation
-SecureRandom is not the best choice for large scale systems due to below reasons (Help from AI to find some of the limitations):
-# Collision risk
-Random generation can produce duplicate aliases, requiring a database unique constraint and retry logic.
+### Alias Generation
+`SecureRandom` is not the best choice for large-scale systems for the following reasons:
 
-# No collision handling in code
-The method generates aliases but does not check or retry if the alias already exists.
+- **Collision risk** — random generation can produce duplicate aliases, requiring a database unique constraint and retry logic.
+- **No collision handling in code** — the method generates aliases but does not check or retry if the alias already exists.
+- **Non-deterministic mapping** — the same long URL generates different aliases each time instead of reusing an existing one.
+- **Performance overhead** — random generation combined with database uniqueness checks can become inefficient at very high scale.
+- **Fixed alias length** — always generating 8-character aliases reduces flexibility and may create unnecessarily long URLs for small datasets.
+- **SecureRandom overhead** — `SecureRandom` is slower than necessary since cryptographic security is not required here.
+- **Enumeration risk** — attackers may attempt to brute-force valid short URLs due to the predictable format and finite keyspace.
 
-# Non-deterministic mapping
-The same long URL can generate different aliases each time instead of reusing an existing one.
+This is a critical component of the system and will need dedicated research to determine the best generation strategy.
 
-# Performance overhead
-Random generation combined with database uniqueness checks can become inefficient at very high scale.
-
-# Fixed alias length
-ays generating 8-character aliases reduces flexibility and may create unnecessarily long URLs for small datasets.
-
-# SecureRandom overhead
-SecureRandom is slower than necessary for this use case since cryptographic security is typically not required.
-
-# Enumeration risk
-Attackers may attempt to brute-force or guess valid short URLs due to predictable format and finite keyspace.
-
-This is a critical component of the system and will need dedicated time to do research on best way to generate aliases.
-
-## Security
+### Security
 Currently, the application does not implement user management or rate limiting due to time constraints. To protect the service against abuse, such as bot attacks, IP-based rate limiting and user authentication could be added. Additionally, analytics endpoints could require authentication, as the data may be considered proprietary for the links each user owns.
 
-### Future Enhancements:
-## Functional Enhancements
+---
 
-# QR Code & Social Sharing
-Provide QR codes and built-in social media sharing options to increase link visibility and improve user engagement.
+## Future Enhancements
 
-# User Management
-Introduce user accounts with optional paid subscriptions to enable personalized and secure experiences.
+### Functional
 
-# Paid Subscription Features
+- **QR Code & Social Sharing** — provide QR codes and built-in social media sharing options to increase link visibility and improve user engagement.
+- **User Management** — introduce user accounts with optional paid subscriptions to enable personalized and secure experiences.
+- **Custom Domains** — allow branded short links (e.g., `youtu.be/videoID`) to improve brand recognition, trust, and click-through rates.
+- **Daily Reporting & Analytics** — provide insights into link performance and ROI.
+- **Link Expiration** — allow users to set expiration dates for links for better control and security.
+- **Edit URLs** — allow editing the long URL for an alias after creation so that changes do not require resharing a new short URL.
+- **Automatic Link Expiration** — support automatic expiration based on a user-defined timeframe or inactivity (e.g., X months or years). When an expired link is accessed, display an error page. Expired links can either be moved to a historical datastore for auditing/analytics or deleted entirely.
+- **UI Improvements** — revamp the UI to better utilise available space and introduce areas for marketing or advertisement banners.
 
-Custom Domains - Allow branded short links (e.g., youtu.be/videoID) to improve brand recognition, trust, and click-through rates.
+### Technical
 
-Daily Reporting & Analytics – Provide insights into link performance and ROI.
-
-Link Expiration – Allow users to set expiration dates for links for better control and security.
-
-Edit URLs - allow editing long urls for alias after creation such that changes to long url does not need resharing new short urls.
-
-# Automatic Link Expiration
-Support automatic expiration based on a user-defined timeframe or inactivity (e.g., X months or years). When an expired link is accessed, display an error page. Expired links can either be moved to a historical datastore for auditing/analytics or deleted entirely.
-
-# UI Improvements
-Revamp the UI to better utilize available space and introduce areas for marketing or advertisement banners.
-
-# Technical Enhancements
-
-# Automated OpenAPI Generation
-Automatically generate the OpenAPI specification during the Maven build and commit the generated file to the repository. This ensures that any changes to backend DTOs are automatically reflected in the API contract.
-
-# TypeScript Code Generation for UI
-Generate TypeScript types from the OpenAPI specification and publish them as a package that the frontend can consume. This removes the need for the UI to manually recreate types and keeps the backend as the single source of truth, ensuring a consistent contract with minimal maintenance.
-
-# Explore better options than using SecureRandom
-
-# Integration Tests
-Currently there are two integration tests testing core feature of adding a new short url, successful redirect when using it and daily aggregation and multiple unit tests for frontend and backend. While this ensures future regressions to sunny day scenarios are caught earlier during CI/CD, add more coverage for validations as well and edge cases as well.
+- **Automated OpenAPI Generation** — automatically generate the OpenAPI specification during the Maven build and commit the generated file to the repository. This ensures that any changes to backend DTOs are automatically reflected in the API contract.
+- **TypeScript Code Generation for UI** — generate TypeScript types from the OpenAPI specification and publish them as a package that the frontend can consume. This removes the need for the UI to manually recreate types and keeps the backend as the single source of truth, ensuring a consistent contract with minimal maintenance.
+- **Explore better alias generation** — research alternatives to `SecureRandom` (e.g., hash-based or counter-based schemes) to improve performance and reduce collision handling complexity.
+- **Integration test coverage** — currently there are integration tests covering short URL creation, successful redirect, and daily click aggregation, plus unit tests for frontend and backend. Additional coverage for validations and edge cases would further reduce regression risk.
